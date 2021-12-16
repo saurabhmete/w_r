@@ -1,20 +1,110 @@
+import 'dart:convert';
+import 'dart:developer';
+// import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
-Future<List<Weather>> fetchWeather(http.Client client) async {
+void fetchWeather(http.Client client) async {
   final response = await client
-      .get(Uri.parse('http://www.7timer.info/bin/api.pl?lon=113.17&lat=23.09&product=astro&output=json'));
+      .get(Uri.parse('https://www.7timer.info/bin/api.pl?lon=113.17&lat=23.09&product=astro&output=json'));
 
-  // Use the compute function to run parsePhotos in a separate isolate.
-  return compute(parseWeather, response.body);
+
+var weather = Weather.fromJson(jsonDecode(response.body) as Map<String,dynamic>);
+
+log(weather.product);
+}
+
+class Dataseries {
+   final int timepoint;
+   final int cloudcover;
+   final int seeing;
+   final int transparency;
+   final int lifted_index;
+   final int rh2m;
+   final Wind10m wind10m;
+   final int temp;
+   final String prec_type;
+
+  const Dataseries({
+    required this.timepoint,
+    required this.cloudcover,
+    required this.seeing,
+    required this.transparency,
+    required this.lifted_index,
+    required this.rh2m,
+    required this.wind10m,
+    required this.temp,
+    required this.prec_type,
+  });
+
+  factory Dataseries.fromJson(Map<String, dynamic> json) {
+    return Dataseries(
+      timepoint: json['timepoint'] as int,
+      cloudcover: json['cloudcover'] as int,
+      transparency : json['transparency'] as int,
+      lifted_index: json['lifted_index'] as int,
+      rh2m: json['rh2m'] as int,
+      wind10m : Wind10m.fromJson(json['wind10m']),
+      temp: json['temp'] as int,
+      seeing: json['seeing'] as int,
+      prec_type : json['prec_type'] as String,
+    );
+  }
+
+}
+
+class Wind10m{
+  late final String direction;
+  late final int speed;
+
+  Wind10m({
+    required this.direction,
+    required this.speed,
+});
+
+  factory Wind10m.fromJson(Map<String, dynamic> json) {
+    return Wind10m(
+      direction: json['direction'] as String,
+      speed: json['speed'] as int,
+    );
+  }
+
 }
 
 class Weather {
+ final String product;
+ final String init;
+ final List<Dataseries> data;
 
+ Weather({
+  required this.product,
+  required this.init,
+  required this.data,
+});
+
+
+
+ factory Weather.fromJson(Map<String, dynamic> json) {
+   List<Dataseries> listOfDataPoints = [];
+   List<dynamic> dataseries = json["dataseries"];
+   for (var datapoint in dataseries) {
+     listOfDataPoints.add(Dataseries.fromJson(datapoint as Map<String,dynamic>));
+   }
+   return Weather(
+     product: json['product'] as String,
+     init: json['init'] as String,
+       data: listOfDataPoints,
+   );
+ }
 
 }
+
+
+
+
 
 void main() {
   runApp(const MyApp());
@@ -69,6 +159,7 @@ class HomeScreen extends StatelessWidget{
                 child: Center(
                   child: CupertinoButton(
                     child: Text(
+
                       'This is tab $i',
                       style: CupertinoTheme
                           .of(context)
@@ -79,6 +170,7 @@ class HomeScreen extends StatelessWidget{
                     onPressed: () {
                       Navigator.of(context).push(
                         CupertinoPageRoute(builder: (context) {
+                          fetchWeather(http.Client());
                           return DetailScreen(i == 0 ? 'Weather' : 'Profile');
                         }),
                       );
