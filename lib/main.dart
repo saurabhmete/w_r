@@ -1,20 +1,22 @@
 import 'dart:convert';
 import 'dart:developer';
-// import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
-void fetchWeather(http.Client client) async {
+ Future<Weather> fetchWeather(http.Client client) async {
   final response = await client
       .get(Uri.parse('https://www.7timer.info/bin/api.pl?lon=113.17&lat=23.09&product=astro&output=json'));
 
 
-var weather = Weather.fromJson(jsonDecode(response.body) as Map<String,dynamic>);
-
-log(weather.product);
+Weather weather = Weather.fromJson(jsonDecode(response.body) as Map<String,dynamic>);
+/*List<Dataseries> data = weather.data;
+var speed = data[0].wind10m.direction;
+log(data.toString());
+log("speed:" + speed);*/
+return weather;
 }
 
 class Dataseries {
@@ -116,8 +118,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return CupertinoApp(
-      theme: const CupertinoThemeData(
+    return const CupertinoApp(
+      theme: CupertinoThemeData(
           textTheme: CupertinoTextThemeData(
             navLargeTitleTextStyle: TextStyle(
               fontWeight: FontWeight.bold,
@@ -125,18 +127,26 @@ class MyApp extends StatelessWidget {
         )
       )
       ),
+
     home: HomeScreen(),
+
     );
   }
 }
 
 class HomeScreen extends StatelessWidget{
+   
+
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return CupertinoTabScaffold(
       tabBar: CupertinoTabBar(
+
           items: const [
             BottomNavigationBarItem(
+
               icon: Icon(CupertinoIcons.cloud_moon_bolt_fill),
               label: 'Weather',
             ),
@@ -147,7 +157,15 @@ class HomeScreen extends StatelessWidget{
           ],
       ),
       tabBuilder: (context,i) {
+
+      fetchWeather(http.Client()).then((weather) async {
+        Weather weatherDetails = weather;
+        return weatherDetails;
+      });
+
+
         if (i == 0) {
+
           return CupertinoTabView(
             builder: (context) {
               return CupertinoPageScaffold(
@@ -155,28 +173,23 @@ class HomeScreen extends StatelessWidget{
                   middle: Text('Weather'),
                 ),
 
-
-                child: Center(
-                  child: CupertinoButton(
-                    child: Text(
-
-                      'This is tab $i',
-                      style: CupertinoTheme
-                          .of(context)
-                          .textTheme
-                          .actionTextStyle
-                          .copyWith(fontSize: 32),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        CupertinoPageRoute(builder: (context) {
-                          fetchWeather(http.Client());
-                          return DetailScreen(i == 0 ? 'Weather' : 'Profile');
-                        }),
+                child: FutureBuilder<Weather>(
+                  future: fetchWeather(http.Client()),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text('An error has occurred!'),
                       );
-                    },
-                  ),
+                    } else if (snapshot.hasData) {
+                      return WeatherDetails(weatherDetails: snapshot.data!);
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
                 ),
+
               );
             },
           );
@@ -192,25 +205,25 @@ class HomeScreen extends StatelessWidget{
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children:   <Widget>[
-                        Center(
+                        const Center(
                           child: CircleAvatar(
                             backgroundImage: AssetImage('assets/DSC_1844.JPG'),
                             radius: 70,
                           ),
                         ),
-                        Divider(
+                        const Divider(
                           height: 40,
                         ),
-                        Text('Saurabh Sanjay Mete',
+                        const Text('Saurabh Sanjay Mete',
                             style:TextStyle(
                               color: Colors.indigo,
                               fontSize: 30,
                               fontWeight: FontWeight.bold
                             )
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         Row(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Text('Nationality:',
                             style: TextStyle(
                               color: Colors.black54,
@@ -227,9 +240,9 @@ class HomeScreen extends StatelessWidget{
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Icon(
                               Icons.phone,
                               color: Colors.indigo,
@@ -243,9 +256,9 @@ class HomeScreen extends StatelessWidget{
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Text('Date of Birth:',
                                 style: TextStyle(
                                   color: Colors.black54,
@@ -262,9 +275,9 @@ class HomeScreen extends StatelessWidget{
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Text('Gender:',
                                 style: TextStyle(
                                   color: Colors.black54,
@@ -281,9 +294,9 @@ class HomeScreen extends StatelessWidget{
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Wrap(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Icon(
                               Icons.email,
                               color: Colors.indigo,
@@ -306,9 +319,9 @@ class HomeScreen extends StatelessWidget{
                           ],
                         ),
 
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Wrap(
-                          children: <Widget>[
+                          children: const <Widget>[
                             Icon(
                               Icons.location_pin,
                               color: Colors.indigo,
@@ -347,13 +360,46 @@ class HomeScreen extends StatelessWidget{
   }
 }
 
+
+class WeatherDetails extends StatelessWidget {
+  const WeatherDetails({Key? key, required this.weatherDetails})
+      : super(key: key);
+
+  final Weather weatherDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(child: Center(
+      child: CupertinoButton(
+        child: Text(
+
+          weatherDetails.product,
+
+          style: CupertinoTheme
+              .of(context)
+              .textTheme
+              .actionTextStyle
+              .copyWith(fontSize: 32),
+        ),
+        onPressed: () {
+          Navigator.of(context).push(
+            CupertinoPageRoute(builder: (context) {
+              return const DetailScreen('Weather');
+            }),
+          );
+        },
+      ),
+    ),);
+  }
+}
+
 class DetailScreen extends StatelessWidget{
   const DetailScreen(this.topic);
   final String topic;
   @override
   Widget build(BuildContext context) {
   return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
+      navigationBar: const CupertinoNavigationBar(
         middle: Text('Details of Weather'),
       ),
           child: Center(
@@ -368,7 +414,7 @@ class DetailScreen extends StatelessWidget{
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
-
+ 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
   // how it looks.
