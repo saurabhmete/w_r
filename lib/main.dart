@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
@@ -12,10 +10,10 @@ import 'package:http/http.dart' as http;
 
 
 Weather weather = Weather.fromJson(jsonDecode(response.body) as Map<String,dynamic>);
-/*List<Dataseries> data = weather.data;
+List<Dataseries> data = weather.data;
 var speed = data[0].wind10m.direction;
 log(data.toString());
-log("speed:" + speed);*/
+log("speed:" + speed);
 return weather;
 }
 
@@ -27,7 +25,7 @@ class Dataseries {
    final int lifted_index;
    final int rh2m;
    final Wind10m wind10m;
-   final int temp;
+   final int temp2m;
    final String prec_type;
 
   const Dataseries({
@@ -38,7 +36,7 @@ class Dataseries {
     required this.lifted_index,
     required this.rh2m,
     required this.wind10m,
-    required this.temp,
+    required this.temp2m,
     required this.prec_type,
   });
 
@@ -50,7 +48,7 @@ class Dataseries {
       lifted_index: json['lifted_index'] as int,
       rh2m: json['rh2m'] as int,
       wind10m : Wind10m.fromJson(json['wind10m']),
-      temp: json['temp'] as int,
+      temp2m: json['temp2m'] as int,
       seeing: json['seeing'] as int,
       prec_type : json['prec_type'] as String,
     );
@@ -184,7 +182,7 @@ class HomeScreen extends StatelessWidget{
                       return WeatherDetails(weatherDetails: snapshot.data!);
                     } else {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child: CupertinoActivityIndicator(),
                       );
                     }
                   },
@@ -369,18 +367,170 @@ class WeatherDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(child: Center(
-      child: CupertinoButton(
-        child: Text(
+    var now = DateTime.now();
+    var hour = now.hour;
+    var nearestTime = 0;
+   List<Dataseries> dataPointsList = weatherDetails.data;
+    if(hour%3==0){
+      nearestTime = hour;
+    }else if(hour%3==1) {
+      nearestTime = hour-1;
+    }else{
+      nearestTime = hour-2;
+    }
+   List<Dataseries> tempThereAfter= [];
+    List<Dataseries> todayTemp = [];
+    List<Dataseries> tomorrowTemp = [];
+    List<Dataseries> dayAfterTemp = [];
+    Dataseries currentTempDetails = dataPointsList[nearestTime~/3];
+   log(weatherDetails.data[0].temp2m.toString());
 
-          weatherDetails.product,
+    for(int k = nearestTime~/3; k<dataPointsList.length;k++){
+         tempThereAfter.add(dataPointsList[k]);
+    }
 
-          style: CupertinoTheme
-              .of(context)
-              .textTheme
-              .actionTextStyle
-              .copyWith(fontSize: 32),
+    for(int i=0;i<tempThereAfter.length;i++){
+      if(tempThereAfter[i].timepoint<24){
+        todayTemp.add(tempThereAfter[i]);
+      }else if(tempThereAfter[i].timepoint>=24 && tempThereAfter[i].timepoint<48){
+        tomorrowTemp.add(tempThereAfter[i]);
+      }else{
+        dayAfterTemp.add(tempThereAfter[i]);
+      }
+    }
+
+    String currentCloud = "";
+    String percipitation = "";
+    IconData cloudIcon = Icons.cloud;
+    if(currentTempDetails.cloudcover>6){
+      currentCloud = "Cloudy";
+      cloudIcon = Icons.cloud;
+    }else if(currentTempDetails.cloudcover<6 && currentTempDetails.cloudcover>3){
+      currentCloud = "Mostly Cloudy";
+      cloudIcon = Icons.cloud_outlined;
+    }else{
+      currentCloud = "Clear";
+      cloudIcon = Icons.cloud_off;
+    }
+
+    if(currentTempDetails.prec_type=="rain"){
+      percipitation = "Rains";
+    }else{
+      percipitation = "Low chances of Rains";
+    }
+
+
+
+
+
+
+    return CupertinoPageScaffold(child:CupertinoButton(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(0, 95, 10, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children:  <Widget>[
+            Row(
+            children: const <Widget>[Icon(
+              Icons.location_pin,
+              size: 40,
+            ),
+
+             Text(
+              'Hamburg',
+              style: TextStyle(
+                color: Colors.indigo,
+                fontSize: 32,
+                fontWeight: FontWeight.bold
+
+              ),
+            ),
+              ],
+            ),
+            const SizedBox(height: 60,),
+            Row(children: <Widget> [
+              Center(
+              child: Text(
+                currentTempDetails.temp2m.toString() + "\u2103",
+
+                style: const TextStyle(
+                    color: Colors.indigo,
+                    fontSize: 140,
+                    fontWeight: FontWeight.bold
+
+                ),
+
+              ),
+              ),
+            ],
+            ),
+
+              const SizedBox(height: 20,),
+
+              /*Center(
+                child: Text(
+                  currentCloud,
+                      style: const TextStyle(
+                      color: Colors.indigo,
+                      fontSize: 50
+
+                  ),
+
+                ),
+              ),*/
+
+            Wrap(children: <Widget> [
+
+               Center(
+                child: Icon(
+                  cloudIcon,
+                  size: 50,
+                ),),
+              const SizedBox(width: 20,),
+              Center(child:Text(
+                currentCloud,
+                style: const TextStyle(
+                    color: Colors.indigo,
+                    fontSize: 50,
+
+                ),
+
+              ),
+              ),
+
+
+
+            ],),
+
+            const SizedBox(height: 20,),
+      Wrap(children: <Widget> [
+
+            const Center(
+               child: Icon(
+                Icons.grain,
+                size: 50,
+              ),),
+               const SizedBox(width: 20,),
+        Center(child:Text(
+          percipitation,
+          style: const TextStyle(
+              color: Colors.indigo,
+              fontSize: 30
+
+          ),
+
         ),
+        ),
+
+
+
+],),
+
+
+
+          ],
+        ),
+      ),
         onPressed: () {
           Navigator.of(context).push(
             CupertinoPageRoute(builder: (context) {
@@ -389,7 +539,7 @@ class WeatherDetails extends StatelessWidget {
           );
         },
       ),
-    ),);
+    );
   }
 }
 
