@@ -615,7 +615,7 @@ class DetailScreen extends StatelessWidget {
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: [
-                                  Text(todayTemp[i].temp2m.toString(),
+                                  Text(todayTemp[i].temp2m.toString() +'\u2103',
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: <Widget>[
@@ -693,7 +693,7 @@ class DetailScreen extends StatelessWidget {
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: [
-                                  Text(tomorrowTemp[i].temp2m.toString(),
+                                  Text(tomorrowTemp[i].temp2m.toString()+'\u2103',
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: <Widget>[
@@ -771,7 +771,7 @@ class DetailScreen extends StatelessWidget {
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: [
-                                  Text(dayAfterTemp[i].temp2m.toString(),
+                                  Text(dayAfterTemp[i].temp2m.toString()+'\u2103',
                                       style: const TextStyle(fontSize: 18))
                                 ]),
                                 Column(children: <Widget>[
