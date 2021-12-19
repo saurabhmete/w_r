@@ -459,7 +459,8 @@ class WeatherDetails extends StatelessWidget {
 }
 
 class DetailScreen extends StatelessWidget {
-  DetailScreen(this.topic, this.allData, this.labels, {Key? key}) : super(key: key);
+  DetailScreen(this.topic, this.allData, this.labels, {Key? key})
+      : super(key: key);
 
   final String topic;
 
@@ -472,13 +473,17 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    labels.forEach((label){
+    labels.forEach((label) {
       List<Dataseries> curr = allData[label]!;
       List<IconData> tempCloudIconData = [];
       List<String> tempPrecipitationData = [];
       curr.forEach((data) {
         // <3 : Clear, 3-6 : Shadowy, >6 : Cloudy
-        tempCloudIconData.add(data.cloudcover>6?Icons.cloud:data.cloudcover>3?Icons.cloud_outlined:Icons.wb_sunny);
+        tempCloudIconData.add(data.cloudcover > 6
+            ? Icons.cloud
+            : data.cloudcover > 3
+                ? Icons.cloud_outlined
+                : Icons.wb_sunny);
         // rain : High, else: : Low
         tempPrecipitationData.add(data.prec_type == "rain" ? "High" : "Low");
       });
@@ -488,7 +493,7 @@ class DetailScreen extends StatelessWidget {
 
     Widget dataView() {
       List<Widget> list = <Widget>[];
-      for (int i=0; i<3; i++) {
+      for (int i = 0; i < 3; i++) {
         String label = labels[i];
         list.add(Container(
           color: Colors.indigo,
@@ -522,7 +527,7 @@ class DetailScreen extends StatelessWidget {
                           Column(children: [
                             Text(
                                 ((tempData[j].timepoint) - (3 + i * 24))
-                                    .toString() +
+                                        .toString() +
                                     " Hrs",
                                 style: const TextStyle(fontSize: 24))
                           ]),
@@ -567,62 +572,112 @@ class DetailScreen extends StatelessWidget {
           itemCount: 1,
           itemBuilder: (BuildContext context, int index) {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.location_pin,
-                      size: 40,
-                    ),
-                    Text(
-                      'Hamburg',
-                      style: TextStyle(
-                          color: Colors.indigo,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                Center(
-                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  SizedBox(height: 15),
+                  Row(
                     children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.all(6),
-                        child: Table(
-                            defaultColumnWidth: const FixedColumnWidth(100),
-                            children: [
-                              TableRow(children: [
-                                Column(children: const [
-                                  Icon(
-                                    Icons.access_time,
-                                    size: 24,
-                                  )
-                                ]),
-                                Column(children: const [
-                                  Text('\u2103',
-                                      style: TextStyle(fontSize: 24)),
-                                ]),
-                                Column(children: const [
-                                  Icon(
-                                    Icons.cloud,
-                                    size: 24,
-                                  )
-                                ]),
-                                Column(children: const [
-                                  Icon(
-                                    Icons.grain,
-                                    size: 24,
-                                  )
-                                ]),
-                              ]),
-                            ]),
+                      SizedBox(width: 15),
+                      Icon(
+                        Icons.location_pin,
+                        size: 30,
+                      ),
+                      Text(
+                        'Hamburg',
+                        style: TextStyle(
+                            color: Colors.indigo,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-                dataView(),
-            ]);
+                  SizedBox(height:15),
+                  Center(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                        Text(
+                          "Now",
+                          style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          allData["Today"]![0].temp2m.toString(),
+                          style: const TextStyle(
+                              color: Colors.indigo,
+                              fontSize: 80,
+                              fontWeight: FontWeight.normal),
+                        ),
+                        Text("\u2103",
+                            style: const TextStyle(
+                              color: Colors.indigo,
+                              fontSize: 60,
+                            )),
+                        SizedBox(
+                          width: 30,
+                        ),
+                        Wrap(
+                          children: <Widget>[
+                            Icon(
+                              cloudIconData["Today"]![0],
+                              size: 50,
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                      ])),
+                  const Divider(height: 2,thickness: 2,),
+                  Center(
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          margin: const EdgeInsets.all(6),
+                          child: Table(
+                              defaultColumnWidth: const FixedColumnWidth(100),
+                              children: [
+                                TableRow(children: [
+                                  Column(children: const [
+                                    Icon(
+                                      Icons.access_time,
+                                      size: 24,
+                                    )
+                                  ]),
+                                  Column(children: const [
+                                    Text('\u2103',
+                                        style: TextStyle(
+                                            fontSize: 24, color: Colors.blue)),
+                                  ]),
+                                  Column(children: const [
+                                    Icon(
+                                      Icons.cloud,
+                                      size: 24,
+                                    )
+                                  ]),
+                                  Column(children: const [
+                                    Icon(
+                                      Icons.grain,
+                                      size: 24,
+                                    )
+                                  ]),
+                                ]),
+                              ]),
+                        ),
+                      ],
+                    ),
+                  ),
+                  dataView(),
+                ]);
           },
         ),
       ),
