@@ -96,6 +96,7 @@ class Weather {
 
 void main() {
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -105,12 +106,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const CupertinoApp(
+
       theme: CupertinoThemeData(
+      brightness: Brightness.light,
           textTheme: CupertinoTextThemeData(
               navLargeTitleTextStyle: TextStyle(
         fontWeight: FontWeight.bold,
+
+
         // fontSize: 70.0,
-      ))),
+      )))
+      ,
       home: HomeScreen(),
     );
   }
@@ -488,16 +494,21 @@ class DetailScreen extends StatelessWidget {
   List<IconData> cloudyIcon = [];
   List<IconData> cloudyIconTom = [];
   List<IconData> cloudyIconAfter = [];
+  List<List> allData = [];
+
+
 
   final ScrollController _firstController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
+
+
     for (int i = 0; i < todayTemp.length; i++) {
       if (todayTemp[i].cloudcover > 6) {
         currentCloud.add("Cloudy");
         cloudyIcon.add(Icons.cloud);
-      } else if (todayTemp[i].cloudcover <=6 && todayTemp[i].cloudcover > 3) {
+      } else if (todayTemp[i].cloudcover <= 6 && todayTemp[i].cloudcover > 3) {
         currentCloud.add("Shadowy");
         cloudyIcon.add(Icons.cloud_outlined);
       } else {
@@ -515,7 +526,7 @@ class DetailScreen extends StatelessWidget {
       if (tomorrowTemp[i].cloudcover > 6) {
         currentCloudTom.add("Cloudy");
         cloudyIconTom.add(Icons.cloud);
-      } else if (tomorrowTemp[i].cloudcover <=6 &&
+      } else if (tomorrowTemp[i].cloudcover <= 6 &&
           tomorrowTemp[i].cloudcover > 3) {
         currentCloudTom.add("Shadowy");
         cloudyIconTom.add(Icons.cloud_outlined);
@@ -535,7 +546,7 @@ class DetailScreen extends StatelessWidget {
       if (dayAfterTemp[i].cloudcover > 6) {
         currentCloudAfter.add("Cloudy");
         cloudyIconAfter.add(Icons.cloud);
-      } else if (dayAfterTemp[i].cloudcover <=6 &&
+      } else if (dayAfterTemp[i].cloudcover <= 6 &&
           dayAfterTemp[i].cloudcover > 3) {
         currentCloudAfter.add("Shadowy");
         cloudyIconAfter.add(Icons.cloud_outlined);
@@ -565,6 +576,49 @@ class DetailScreen extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                Row(children: <Widget>[Icon(
+                  Icons.location_pin,
+                  size: 40,
+                ),
+                  Text(
+                    'Hamburg',
+                    style: TextStyle(
+                        color: Colors.indigo,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold),
+                  ),],),
+
+                Center(child: Column(
+                children: <Widget>[
+                Container(
+                margin: const EdgeInsets.all(6),
+            child: Table(
+                    defaultColumnWidth: const FixedColumnWidth(100),
+                    children: [
+                      TableRow(children: [
+                        Column(children: const [
+                          Icon(
+                            Icons.access_time,
+                            size: 24,
+                          )
+                        ]),
+                        Column(children: const [
+                          Text('\u2103', style: TextStyle(fontSize: 24)),
+                        ]),
+                        Column(children: const [
+                          Icon(
+                            Icons.cloud,
+                            size: 24,
+                          )
+                        ]),
+                        Column(children: const [
+                          Icon(
+                            Icons.grain,
+                            size: 24,
+                          )
+                        ]),
+                      ]),
+                    ]),),],),),
                 Container(
                   color: Colors.indigo,
                   child: const Center(
@@ -580,31 +634,9 @@ class DetailScreen extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.all(6),
                         child: Table(
+                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
                           defaultColumnWidth: const FixedColumnWidth(100),
                           children: [
-                            TableRow(children: [
-                              Column(children: const [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Text('\u2103', style: TextStyle(fontSize: 18)),
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.cloud,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.grain,
-                                  size: 18,
-                                )
-                              ]),
-                            ]),
                             for (int i = 0; i < todayTemp.length; i++)
                               TableRow(children: [
                                 Column(children: [
@@ -612,30 +644,24 @@ class DetailScreen extends StatelessWidget {
                                       ((todayTemp[i].timepoint) - 3)
                                               .toString() +
                                           " Hrs",
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: [
-                                  Text(todayTemp[i].temp2m.toString() +'\u2103',
-                                      style: const TextStyle(fontSize: 18))
+                                  Text(todayTemp[i].temp2m.toString(),
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: <Widget>[
-                                  Row(
-                                    children: <Widget>[
-                                      Icon(
-                                        cloudyIcon[i],
-                                        size: 20,
-                                      ),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(currentCloud[i],
-                                          style: const TextStyle(fontSize: 18))
-                                    ],
+                                  Icon(
+                                    cloudyIconAfter[i],
+                                    size: 24,
+                                  ),
+                                  const SizedBox(
+                                    width: 5,
                                   ),
                                 ]),
                                 Column(children: [
                                   Text(precipitationDetail[i],
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                               ])
                           ],
@@ -658,31 +684,9 @@ class DetailScreen extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.all(6),
                         child: Table(
+                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
                           defaultColumnWidth: const FixedColumnWidth(100),
                           children: [
-                            TableRow(children: [
-                              Column(children: const [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Text('\u2103', style: TextStyle(fontSize: 18)),
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.cloud,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.grain,
-                                  size: 18,
-                                )
-                              ]),
-                            ]),
                             for (int i = 0; i < tomorrowTemp.length; i++)
                               TableRow(children: [
                                 Column(children: [
@@ -690,30 +694,21 @@ class DetailScreen extends StatelessWidget {
                                       ((tomorrowTemp[i].timepoint) - 27)
                                               .toString() +
                                           " Hrs",
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: [
-                                  Text(tomorrowTemp[i].temp2m.toString()+'\u2103',
-                                      style: const TextStyle(fontSize: 18))
+                                  Text(tomorrowTemp[i].temp2m.toString(),
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: <Widget>[
-                                  Row(
-                                    children: <Widget>[
-                                      Icon(
-                                        cloudyIconTom[i],
-                                        size: 20,
-                                      ),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(currentCloudTom[i],
-                                          style: const TextStyle(fontSize: 18))
-                                    ],
+                                  Icon(
+                                    cloudyIconAfter[i],
+                                    size: 24,
                                   ),
                                 ]),
                                 Column(children: [
                                   Text(precipitationDetailTom[i],
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                               ])
                           ],
@@ -736,31 +731,9 @@ class DetailScreen extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.all(6),
                         child: Table(
+                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
                           defaultColumnWidth: const FixedColumnWidth(100),
                           children: [
-                            TableRow(children: [
-                              Column(children: const [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Text('\u2103', style: TextStyle(fontSize: 18)),
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.cloud,
-                                  size: 18,
-                                )
-                              ]),
-                              Column(children: const [
-                                Icon(
-                                  Icons.grain,
-                                  size: 18,
-                                )
-                              ]),
-                            ]),
                             for (int i = 0; i < dayAfterTemp.length; i++)
                               TableRow(children: [
                                 Column(children: [
@@ -768,30 +741,21 @@ class DetailScreen extends StatelessWidget {
                                       ((dayAfterTemp[i].timepoint) - 51)
                                               .toString() +
                                           " Hrs",
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: [
-                                  Text(dayAfterTemp[i].temp2m.toString()+'\u2103',
-                                      style: const TextStyle(fontSize: 18))
+                                  Text(dayAfterTemp[i].temp2m.toString(),
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                                 Column(children: <Widget>[
-                                  Row(
-                                    children: <Widget>[
-                                      Icon(
-                                        cloudyIconAfter[i],
-                                        size: 20,
-                                      ),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(currentCloudAfter[i],
-                                          style: const TextStyle(fontSize: 18))
-                                    ],
+                                  Icon(
+                                    cloudyIconAfter[i],
+                                    size: 24,
                                   ),
                                 ]),
                                 Column(children: [
                                   Text(precipitationDetailAfter[i],
-                                      style: const TextStyle(fontSize: 18))
+                                      style: const TextStyle(fontSize: 24))
                                 ]),
                               ])
                           ],
