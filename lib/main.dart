@@ -96,7 +96,6 @@ class Weather {
 
 void main() {
   runApp(const MyApp());
-
 }
 
 class MyApp extends StatelessWidget {
@@ -106,17 +105,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const CupertinoApp(
-
       theme: CupertinoThemeData(
-      brightness: Brightness.light,
+          brightness: Brightness.light,
           textTheme: CupertinoTextThemeData(
               navLargeTitleTextStyle: TextStyle(
-        fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.bold,
 
-
-        // fontSize: 70.0,
-      )))
-      ,
+            // fontSize: 70.0,
+          ))),
       home: HomeScreen(),
     );
   }
@@ -329,32 +325,19 @@ class WeatherDetails extends StatelessWidget {
     var hour = now.hour;
     var nearestTime = 0;
     List<Dataseries> dataPointsList = weatherDetails.data;
-    if (hour % 3 == 0) {
-      nearestTime = hour;
-    } else if (hour % 3 == 1) {
-      nearestTime = hour - 1;
-    } else {
-      nearestTime = hour - 2;
-    }
-    List<Dataseries> tempThereAfter = [];
-    List<Dataseries> todayTemp = [];
-    List<Dataseries> tomorrowTemp = [];
-    List<Dataseries> dayAfterTemp = [];
+    nearestTime = hour - hour % 3;
+    Map<String, List<Dataseries>> allData = {};
+    List<String> labels = ["Today", "Tomorrow", "Day After Tomorrow"];
     Dataseries currentTempDetails = dataPointsList[nearestTime ~/ 3];
 
-    for (int k = nearestTime ~/ 3; k < dataPointsList.length; k++) {
-      tempThereAfter.add(dataPointsList[k]);
-    }
-
-    for (int i = 0; i < tempThereAfter.length; i++) {
-      if (tempThereAfter[i].timepoint <= 24) {
-        todayTemp.add(tempThereAfter[i]);
-      } else if (tempThereAfter[i].timepoint > 24 &&
-          tempThereAfter[i].timepoint <= 48) {
-        tomorrowTemp.add(tempThereAfter[i]);
-      } else {
-        dayAfterTemp.add(tempThereAfter[i]);
+    for (int i = 0; i < 3; i++) {
+      List<Dataseries> temp = [];
+      for (int j = 0; j < 8; j++) {
+        int idx = i * 8 + j;
+        if (idx < nearestTime ~/ 3) continue;
+        temp.add(dataPointsList[idx]);
       }
+      allData.putIfAbsent(labels[i], () => temp);
     }
 
     String currentCloud = "";
@@ -466,8 +449,7 @@ class WeatherDetails extends StatelessWidget {
         onPressed: () {
           Navigator.of(context).push(
             CupertinoPageRoute(builder: (context) {
-              return DetailScreen(
-                  'Weather', todayTemp, tomorrowTemp, dayAfterTemp);
+              return DetailScreen('Weather', allData, labels);
             }),
           );
         },
@@ -477,89 +459,100 @@ class WeatherDetails extends StatelessWidget {
 }
 
 class DetailScreen extends StatelessWidget {
-  DetailScreen(this.topic, this.todayTemp, this.tomorrowTemp, this.dayAfterTemp,
-      {Key? key})
-      : super(key: key);
+  DetailScreen(this.topic, this.allData, this.labels, {Key? key}) : super(key: key);
 
   final String topic;
-  List<Dataseries> todayTemp;
-  List<Dataseries> tomorrowTemp;
-  List<Dataseries> dayAfterTemp;
-  List<String> currentCloud = [];
-  List<String> precipitationDetail = [];
-  List<String> currentCloudTom = [];
-  List<String> precipitationDetailTom = [];
-  List<String> currentCloudAfter = [];
-  List<String> precipitationDetailAfter = [];
-  List<IconData> cloudyIcon = [];
-  List<IconData> cloudyIconTom = [];
-  List<IconData> cloudyIconAfter = [];
-  List<List> allData = [];
 
-
+  Map<String, List<Dataseries>> allData = {};
+  Map<String, List<String>> precipitationData = {};
+  Map<String, List<IconData>> cloudIconData = {};
+  List<String> labels = [];
 
   final ScrollController _firstController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
+    labels.forEach((label){
+      List<Dataseries> curr = allData[label]!;
+      List<IconData> tempCloudIconData = [];
+      List<String> tempPrecipitationData = [];
+      curr.forEach((data) {
+        // <3 : Clear, 3-6 : Shadowy, >6 : Cloudy
+        tempCloudIconData.add(data.cloudcover>6?Icons.cloud:data.cloudcover>3?Icons.cloud_outlined:Icons.wb_sunny);
+        // rain : High, else: : Low
+        tempPrecipitationData.add(data.prec_type == "rain" ? "High" : "Low");
+      });
+      cloudIconData.putIfAbsent(label, () => tempCloudIconData);
+      precipitationData.putIfAbsent(label, () => tempPrecipitationData);
+    });
 
-
-    for (int i = 0; i < todayTemp.length; i++) {
-      if (todayTemp[i].cloudcover > 6) {
-        currentCloud.add("Cloudy");
-        cloudyIcon.add(Icons.cloud);
-      } else if (todayTemp[i].cloudcover <= 6 && todayTemp[i].cloudcover > 3) {
-        currentCloud.add("Shadowy");
-        cloudyIcon.add(Icons.cloud_outlined);
-      } else {
-        currentCloud.add("Clear");
-        cloudyIcon.add(Icons.wb_sunny);
+    Widget dataView() {
+      List<Widget> list = <Widget>[];
+      for (int i=0; i<3; i++) {
+        String label = labels[i];
+        list.add(Container(
+          color: Colors.indigo,
+          child: Center(
+            child: Text(label,
+                style: TextStyle(color: Colors.white, fontSize: 35)),
+          ),
+        ));
+        list.add(
+          const SizedBox(height: 10),
+        );
+        List<Dataseries> tempData = allData[label]!;
+        List<IconData> tempCloudIconData = cloudIconData[label]!;
+        List<String> tempPrecipitationData = precipitationData[label]!;
+        list.add(
+          Center(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  margin: const EdgeInsets.all(6),
+                  child: Table(
+                    border: TableBorder(
+                        horizontalInside: BorderSide(
+                            width: 1,
+                            color: Colors.black38,
+                            style: BorderStyle.solid)),
+                    defaultColumnWidth: const FixedColumnWidth(100),
+                    children: [
+                      for (int j = 0; j < tempData.length; j++)
+                        TableRow(children: [
+                          Column(children: [
+                            Text(
+                                ((tempData[j].timepoint) - (3 + i * 24))
+                                    .toString() +
+                                    " Hrs",
+                                style: const TextStyle(fontSize: 24))
+                          ]),
+                          Column(children: [
+                            Text(tempData[j].temp2m.toString(),
+                                style: const TextStyle(fontSize: 24))
+                          ]),
+                          Column(children: <Widget>[
+                            Icon(
+                              tempCloudIconData[j],
+                              size: 24,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                          ]),
+                          Column(children: [
+                            Text(tempPrecipitationData[j],
+                                style: const TextStyle(fontSize: 24))
+                          ]),
+                        ])
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       }
-
-      if (todayTemp[i].prec_type == "rain") {
-        precipitationDetail.add("High");
-      } else {
-        precipitationDetail.add("Low");
-      }
-    }
-    for (int i = 0; i < tomorrowTemp.length; i++) {
-      if (tomorrowTemp[i].cloudcover > 6) {
-        currentCloudTom.add("Cloudy");
-        cloudyIconTom.add(Icons.cloud);
-      } else if (tomorrowTemp[i].cloudcover <= 6 &&
-          tomorrowTemp[i].cloudcover > 3) {
-        currentCloudTom.add("Shadowy");
-        cloudyIconTom.add(Icons.cloud_outlined);
-      } else {
-        currentCloudTom.add("Clear");
-        cloudyIconTom.add(Icons.wb_sunny);
-      }
-
-      if (tomorrowTemp[i].prec_type == "rain") {
-        precipitationDetailTom.add("High");
-      } else {
-        precipitationDetailTom.add("Low");
-      }
-    }
-
-    for (int i = 0; i < dayAfterTemp.length; i++) {
-      if (dayAfterTemp[i].cloudcover > 6) {
-        currentCloudAfter.add("Cloudy");
-        cloudyIconAfter.add(Icons.cloud);
-      } else if (dayAfterTemp[i].cloudcover <= 6 &&
-          dayAfterTemp[i].cloudcover > 3) {
-        currentCloudAfter.add("Shadowy");
-        cloudyIconAfter.add(Icons.cloud_outlined);
-      } else {
-        currentCloudAfter.add("Clear");
-        cloudyIconAfter.add(Icons.wb_sunny);
-      }
-
-      if (dayAfterTemp[i].prec_type == "rain") {
-        precipitationDetailAfter.add("High");
-      } else {
-        precipitationDetailAfter.add("Low");
-      }
+      return new Column(children: list);
     }
 
     return CupertinoPageScaffold(
@@ -576,196 +569,60 @@ class DetailScreen extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Row(children: <Widget>[Icon(
-                  Icons.location_pin,
-                  size: 40,
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.location_pin,
+                      size: 40,
+                    ),
+                    Text(
+                      'Hamburg',
+                      style: TextStyle(
+                          color: Colors.indigo,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-                  Text(
-                    'Hamburg',
-                    style: TextStyle(
-                        color: Colors.indigo,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold),
-                  ),],),
-
-                Center(child: Column(
-                children: <Widget>[
-                Container(
-                margin: const EdgeInsets.all(6),
-            child: Table(
-                    defaultColumnWidth: const FixedColumnWidth(100),
-                    children: [
-                      TableRow(children: [
-                        Column(children: const [
-                          Icon(
-                            Icons.access_time,
-                            size: 24,
-                          )
-                        ]),
-                        Column(children: const [
-                          Text('\u2103', style: TextStyle(fontSize: 24)),
-                        ]),
-                        Column(children: const [
-                          Icon(
-                            Icons.cloud,
-                            size: 24,
-                          )
-                        ]),
-                        Column(children: const [
-                          Icon(
-                            Icons.grain,
-                            size: 24,
-                          )
-                        ]),
-                      ]),
-                    ]),),],),),
-                Container(
-                  color: Colors.indigo,
-                  child: const Center(
-                    child: Text("Today",
-                        style: TextStyle(color: Colors.white, fontSize: 35)),
-                  ),
-                  // ),
-                ),
-                const SizedBox(height: 10),
                 Center(
                   child: Column(
                     children: <Widget>[
                       Container(
                         margin: const EdgeInsets.all(6),
                         child: Table(
-                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
-                          defaultColumnWidth: const FixedColumnWidth(100),
-                          children: [
-                            for (int i = 0; i < todayTemp.length; i++)
+                            defaultColumnWidth: const FixedColumnWidth(100),
+                            children: [
                               TableRow(children: [
-                                Column(children: [
-                                  Text(
-                                      ((todayTemp[i].timepoint) - 3)
-                                              .toString() +
-                                          " Hrs",
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: [
-                                  Text(todayTemp[i].temp2m.toString(),
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: <Widget>[
+                                Column(children: const [
                                   Icon(
-                                    cloudyIconAfter[i],
+                                    Icons.access_time,
                                     size: 24,
-                                  ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
+                                  )
                                 ]),
-                                Column(children: [
-                                  Text(precipitationDetail[i],
-                                      style: const TextStyle(fontSize: 24))
+                                Column(children: const [
+                                  Text('\u2103',
+                                      style: TextStyle(fontSize: 24)),
                                 ]),
-                              ])
-                          ],
-                        ),
+                                Column(children: const [
+                                  Icon(
+                                    Icons.cloud,
+                                    size: 24,
+                                  )
+                                ]),
+                                Column(children: const [
+                                  Icon(
+                                    Icons.grain,
+                                    size: 24,
+                                  )
+                                ]),
+                              ]),
+                            ]),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  color: Colors.indigo,
-                  child: const Center(
-                    child: Text("Tomorrow",
-                        style: TextStyle(color: Colors.white, fontSize: 35)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.all(6),
-                        child: Table(
-                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
-                          defaultColumnWidth: const FixedColumnWidth(100),
-                          children: [
-                            for (int i = 0; i < tomorrowTemp.length; i++)
-                              TableRow(children: [
-                                Column(children: [
-                                  Text(
-                                      ((tomorrowTemp[i].timepoint) - 27)
-                                              .toString() +
-                                          " Hrs",
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: [
-                                  Text(tomorrowTemp[i].temp2m.toString(),
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: <Widget>[
-                                  Icon(
-                                    cloudyIconAfter[i],
-                                    size: 24,
-                                  ),
-                                ]),
-                                Column(children: [
-                                  Text(precipitationDetailTom[i],
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                              ])
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  color: Colors.indigo,
-                  child: const Center(
-                    child: Text("Day After Tomorrow",
-                        style: TextStyle(color: Colors.white, fontSize: 35)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.all(6),
-                        child: Table(
-                          border: TableBorder(horizontalInside: BorderSide(width: 1, color: Colors.black38, style: BorderStyle.solid)),
-                          defaultColumnWidth: const FixedColumnWidth(100),
-                          children: [
-                            for (int i = 0; i < dayAfterTemp.length; i++)
-                              TableRow(children: [
-                                Column(children: [
-                                  Text(
-                                      ((dayAfterTemp[i].timepoint) - 51)
-                                              .toString() +
-                                          " Hrs",
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: [
-                                  Text(dayAfterTemp[i].temp2m.toString(),
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                                Column(children: <Widget>[
-                                  Icon(
-                                    cloudyIconAfter[i],
-                                    size: 24,
-                                  ),
-                                ]),
-                                Column(children: [
-                                  Text(precipitationDetailAfter[i],
-                                      style: const TextStyle(fontSize: 24))
-                                ]),
-                              ])
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
+                dataView(),
+            ]);
           },
         ),
       ),
