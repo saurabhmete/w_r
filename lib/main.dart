@@ -532,7 +532,7 @@ class DetailScreen extends StatelessWidget {
                                 style: const TextStyle(fontSize: 24))
                           ]),
                           Column(children: [
-                            Text(tempData[j].temp2m.toString(),
+                            Text(tempData[j].temp2m.toString()+" \u2103",
                                 style: const TextStyle(fontSize: 24))
                           ]),
                           Column(children: <Widget>[
@@ -591,7 +591,7 @@ class DetailScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height:15),
+                  SizedBox(height: 15),
                   Center(
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -637,7 +637,10 @@ class DetailScreen extends StatelessWidget {
                           height: 20,
                         ),
                       ])),
-                  const Divider(height: 2,thickness: 2,),
+                  const Divider(
+                    height: 2,
+                    thickness: 2,
+                  ),
                   Center(
                     child: Column(
                       children: <Widget>[
